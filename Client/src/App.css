@@ -57,3 +57,7 @@
 .hover:hover{
   background: #141414;
 }
+
+.consolas{
+  font-family: consolas;
+}

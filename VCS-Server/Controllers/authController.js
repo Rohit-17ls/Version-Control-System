@@ -3,6 +3,8 @@ const {pool} = require('../DB/connection.js');
 const crypto = require('crypto');
 require('dotenv').config();
 
+const {exec} = require('child_process');
+
 const createToken = (data) => {
     return jwt.sign({data}, process.env.JWT_SECRET_KEY.toString(), {expiresIn : 24 * 3600 * 5});
 }
@@ -81,7 +83,18 @@ module.exports.orgSignupHandler = async(req, res, next) => {
         const [result] = await connection.execute(query);
         connection.release();
 
-        return res.json({authStatus : true, message : 'Signup Successful'})
+        const cwd = `${process.env.PROJECTS_DIRECTORY}`
+        await exec(`mkdir ${orgname}`, {cwd}, (error, stdout, stderr) => {
+            if(error){
+                console.log('--> Error : ', error , ' <--');
+                res.json({status : false, message : "Couldn't Signup"});
+                return;
+            }
+
+            res.json({authStatus : true, message : 'Signup Successful'})
+        });
+
+
 
 
     }catch(err){

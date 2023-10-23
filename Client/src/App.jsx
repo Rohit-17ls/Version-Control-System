@@ -10,6 +10,7 @@ import OrgLogin from './Routes/OrgLogin'
 import AppContextProvider from './context/AppContext'
 import NewProject from './Routes/NewProject'
 import Project from './Routes/Project'
+import ProjectList from './Routes/ProjectList'
 
 
 function App() {
@@ -25,7 +26,8 @@ function App() {
           <Route path="/org/signup" element={<OrgSignup/>}/>
           <Route path="/org/login" element={<OrgLogin/>}/>
           <Route path="/new-project" element={<NewProject/>}/>
-          <Route path="/:org/:projectName/*" element={<Project/>}/>
+          <Route path="/:orgname/projects" element={<ProjectList/>}/>
+          <Route path="/:org/:projectName/:branchName/*" element={<Project/>}/>
           <Route path="*" element={<NotFound/>}/>
         </Routes>
       
