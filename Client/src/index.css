@@ -50,6 +50,20 @@ button:hover {
   opacity: 0.85;
 }
 
+*::-webkit-scrollbar {
+  width: 10px;
+}
+
+*::-webkit-scrollbar-track {
+  background: #1e1d1d;
+  opacity: 0.1;
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: #afa99e72;
+  border-radius: 1em;
+}
+
 
 @media (prefers-color-scheme: light) {
   :root {

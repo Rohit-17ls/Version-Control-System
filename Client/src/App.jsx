@@ -11,6 +11,7 @@ import AppContextProvider from './context/AppContext'
 import NewProject from './Routes/NewProject'
 import Project from './Routes/Project'
 import ProjectList from './Routes/ProjectList'
+import SearchProjects from './Routes/SearchProjects'
 
 
 function App() {
@@ -26,6 +27,7 @@ function App() {
           <Route path="/org/signup" element={<OrgSignup/>}/>
           <Route path="/org/login" element={<OrgLogin/>}/>
           <Route path="/new-project" element={<NewProject/>}/>
+          <Route path="projects" element={<SearchProjects/>}/>
           <Route path="/:orgname/projects" element={<ProjectList/>}/>
           <Route path="/:org/:projectName/:branchName/*" element={<Project/>}/>
           <Route path="*" element={<NotFound/>}/>

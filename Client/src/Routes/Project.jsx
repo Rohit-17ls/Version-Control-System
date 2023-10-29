@@ -1,4 +1,4 @@
-import React, {useState, useContext, useEffect, useMemo } from 'react'
+import React, {useState, useContext, useEffect, useMemo, useRef, useCallback } from 'react'
 import { AppContext } from '../context/AppContext';
 import Small from '../components/Headings/Small';
 import ProjectStructure from '../components/Utility/ProjectStructure';
@@ -6,6 +6,9 @@ import CommandLineIcon from '../components/Icons/CommandLineIcon';
 import BranchIcon from '../components/Icons/BranchIcon';
 import CommandLine from '../components/Utility/CommandLine';
 import BranchList from '../components/Utility/BranchList';
+import AddIcon from '../components/Icons/AddIcon';
+import Button from '../components/Core/Button';
+import DownloadIcon from '../components/Icons/DownloadIcon';
 
 
 const ORGNAME_INDEX = 3;
@@ -36,8 +39,12 @@ const Project = () => {
 
     const [path, setPath] = useState(hrefSplit.slice(ORGNAME_INDEX,).join('/'));
     const [commandPalette, setCommandPalette] = useState(false);
-    const [currentBranch, setCurrentBranch] = useState(branchName);
     const [showBranch, setShowBranch] = useState(false);
+    const [files, setFiles] = useState([]);
+    const [addFilesStatus, setAddFilesStatus] = useState('Add Files');
+
+    const uploadFilesRef = useRef();
+    const downloadTargetRef = useRef();
 
     useEffect(() => {
         setPath(hrefSplit.slice(ORGNAME_INDEX,).join('/'));
@@ -54,12 +61,74 @@ const Project = () => {
       // setCurrentBranch(branch);
     }
 
+    const handleFilesDrop = useCallback(async(e) => {
+      e.preventDefault();
+
+      if(e.dataTransfer.items){
+        [...e.dataTransfer.items].forEach(async(item, i) => {
+          if(item.kind === "file"){
+            const file = item.getAsFile();
+            const reader = new FileReader();
+
+            reader.onload = async(e) => {
+              const fileContent = e.target.result;
+              setFiles(prevState => [...prevState, {name : file.name, content : fileContent}]);
+            }
+
+            reader.readAsText(file)
+          }
+        });
+
+      }
+    });
+
+    const addFiles = useCallback(async() => {
+      if(!files.length) return;
+
+      const res = await fetch('http://localhost:7888/api/addFiles', {
+        method : 'POST',
+        credentials : 'include',
+        headers : {
+          'Content-Type' : 'application/json',
+        },
+        body : JSON.stringify({orgname : orgname ,
+                               path : path.split('/').filter((x, ind) => ind != 2).slice(1,).join('/'),
+                               branch : branchName,
+                               data : files})
+      });
+      const data = await res.json();
+
+      if(!data.status) setAddFilesStatus('Failed to add files');
+      else setAddFilesStatus('Added files');
+
+      console.log(data);
+      
+    });
+
+    const downloadProject = useCallback(async(e) => {
+      console.log(`http://localhost:7888/api/${orgname}/${projectName}.git`)
+      fetch(`http://localhost:7888/api/${orgname}/${projectName}.git`, {
+        method : 'GET'
+      }).then((response) => {
+        if(response.status === 200){
+          response.blob().then((blob) => {
+            const url = window.URL.createObjectURL(blob);
+            downloadTargetRef.current.href = url;
+            downloadTargetRef.current.click();
+            downloadTargetRef.current.download = `${projectName}.zip`
+            window.URL.revokeObjectURL(url);
+
+          })
+        }
+      })
+    })
+
 
     return (
       <section>
           <Small className='my-5 hover:underline' onClick={(e) => {navigate('/')}}>{orgname}</Small>
           <Small className='text-4xl'>{projectName}</Small>
-          <div className='flex flex-row items-center gap-[3vw] my-6'>
+          <div className='flex flex-row items-center gap-[2vw] my-6'>
             <div className={`${showBranch ? 'flex flex-col' : ''} `}
                  onClick={(e) => {setShowBranch(!showBranch)}}>
              <div className='gap-3 px-3 py-1 bg-muted-light rounded-lg hover:cursor-pointer'>
@@ -69,10 +138,45 @@ const Project = () => {
               {showBranch && <BranchList switchBranch={switchBranch} orgname={orgname} projectName={projectName}/>}
             </div>
             
-            <div onClick={(e) => {setCommandPalette(!commandPalette)}}>
+            <div onClick={(e) => {setCommandPalette(!commandPalette)}} title="Open Command Line">
               <CommandLineIcon/>
             </div>
+            <div className='align-top'
+                 title="Add Files"
+                 onClick={(e) => {uploadFilesRef.current.showModal()}}>
+              <AddIcon/>
+            </div>
+            <div title="Download as zip" onClick={(e) => {downloadProject(e)}}>
+              <DownloadIcon/>
+            </div>
+            <a className='hidden' ref={downloadTargetRef}></a>
           </div>
+
+          {/* Begin Modals */}
+          <dialog ref={uploadFilesRef}>
+            <div className='bg-none min-w-[400px] w-[60vw] h-[40vh] rounded-lg p-4 flex flex-col gap-3'>
+              <p onClick={(e) => {uploadFilesRef.current.close()}} className='ml-[98%] hover:cursor-pointer'>✖</p>
+
+              <p className='text-muted pl-4 my-3'>
+                Upload Files to <strong className='text-white'>{path.split('/').filter((x, ind) => ind !== 2 ).join('/')}</strong>,
+                branch : <strong className='text-white'>{branchName}</strong>
+              </p>
+
+              <div className='border-[4px] border-muted border-dashed w-4/5 h-4/5 m-auto text-center text-muted p-4 overflow-y-scroll'
+                   onDragOver = {(e) => {e.preventDefault()}}
+                   onDrop={(e) => {handleFilesDrop(e)}}>
+                {files.length === 0 ? "Drop your files here" 
+                                    : files.map((file, ind) => <div key={ind} className='text-start px-2 m-1 rounded-lg font-semibold'>
+                                                                  {file.name} <small className='pl-3'>{file.content.length}B</small>
+                                                                </div>)
+                }
+              </div>
+              <Button className='w-[33%] bg-success-dark' clickHandler={(e) => {addFiles()}}>{addFilesStatus}</Button>
+            </div>
+
+          </dialog>
+
+          {/* End Modals */}
 
           {commandPalette && <CommandLine orgname={orgname}
                                           projectName={projectName}

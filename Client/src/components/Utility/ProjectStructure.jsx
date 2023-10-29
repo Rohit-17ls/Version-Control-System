@@ -34,7 +34,7 @@ const ProjectStructure = ({path, branch, projectPath, orgname, projectName}) => 
     const getTimeSinceModification = (lastUpdated) => {}
 
   return (
-    <section className='w-[80%] m-0 sm-max:w-full border-muted border-[1px] rounded-lg'>
+    <section className='w-[80%] mb-5 sm-max:w-full border-muted border-[1px] rounded-lg'>
         <div className='text-white font-medium bg-muted-light rounded-t-lg p-2 m-0'>{projectPath}</div>
         
         <p className='p-1 px-3 mb-3 text-2xl hover:underline border-muted border-b-[1px]' 

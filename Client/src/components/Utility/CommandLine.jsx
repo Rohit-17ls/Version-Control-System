@@ -62,7 +62,7 @@ const CommandLine = ({orgname, projectName, branch, projectPath}) => {
         </section>
 
         <div className={`${commandResponse.status ? 'p-3'  : 'text-error' }`}>
-            <pre>
+            <pre className='whitespace-pre-wrap p-2'>
                 {commandResponse.status ? commandResponse.result : commandResponse.message}
             </pre>
         </div>

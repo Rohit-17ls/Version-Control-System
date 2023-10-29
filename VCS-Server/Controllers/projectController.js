@@ -1,7 +1,54 @@
 const fs = require('fs');
+const archiver = require('archiver');
 const {exec} = require('child_process');
 require('dotenv').config();
 const {pool} = require('../DB/connection.js');
+
+/************************************************************************************************************************************************* */
+
+const autoCommitAfterUpdate = async(cwd, branch, addFiles, commitMessage, res, response) => {
+    try{
+        console.log(addFiles.join(' '), commitMessage);
+        
+        exec(`git checkout ${branch} && git add ${addFiles.join(' ')} && git commit -m "${commitMessage}"`, {cwd}, async(error, stdout, stderr) => {
+            if(error){
+                console.log(error);
+            }
+            res.json(response);
+        });
+        
+    }catch(err){
+        console.log(err);
+        res.json({status : false, message : "Couldn't add files"})
+    }
+}
+
+const visitProjectFiles = (path) => {
+
+    const fileList = fs.readdirSync(path);
+    let files = [];
+
+    for(const entity of fileList){
+        const entityPath = `${path}/${entity}`;
+        if(fs.statSync(entityPath).isDirectory()){
+            const childFiles = visitProjectFiles(entityPath);
+            if(childFiles.length){
+                files = [...files, ...childFiles];
+            }
+        }else{
+            files.push(entityPath);
+        }
+    }
+
+
+    return files;
+
+}
+
+
+
+/************************************************************************************************************************************************* */
+
 
 module.exports.resolveResources = async(req, res, next) => {
     try{
@@ -187,3 +234,106 @@ module.exports.createProject = async(req, res, next) => {
         res.json({status : false, message : "Couldn't create project"});
     }
 }
+
+
+
+module.exports.addFiles = async(req, res, next) => {
+    try{
+        console.log(req.body);
+
+        const branch = req.body.branch; 
+        const orgname = req.body.orgname;
+        const path  = req.body.path;
+        const command = `git checkout ${branch}`;
+        const cwd = `${process.env.PROJECTS_DIRECTORY}/${orgname}/${path}`
+
+        exec(command, {cwd}, async(error, stdout, stderr) => {
+            try{
+                let commitMessage = 'Added files - ';
+                const addedFiles = [];
+                for(let entity of req.body.data){
+                    fs.writeFile(`${cwd}/${entity.name}`, entity.content, async(err) => {
+                        if(err){
+                            console.log("Error creating/writing to file");
+                        }
+                    });
+                    commitMessage = `${commitMessage} ${entity.name},`;
+                    addedFiles.push(entity.name);
+
+                }
+
+                autoCommitAfterUpdate(cwd, branch, addedFiles, commitMessage, res, {status : true, message : 'Added files succesfully'});
+
+            }catch(err){
+                if(err){
+                    res.json({status : false, message : 'Failed to add files'})
+                }
+
+            }
+        })
+    
+        
+    }catch(err){
+        console.log(err);
+        res.json({status : false, message : 'Failed to add files'});
+    }
+}
+
+
+module.exports.sendZippedProject = async(req, res, next) => {
+    try{
+        const orgname = req.params.orgname;
+        const projectName = req.params.projectName;
+
+        console.log(orgname, projectName);
+
+        const path = `${process.env.PROJECTS_DIRECTORY}/${orgname}/${projectName}`;
+        const files = visitProjectFiles(path);
+
+        
+        const archive = archiver('zip', {zlib : {level : 9}}); // Creating a zip archive with a compression level of 9
+        res.setHeader('Content-Type', 'application/zip');
+        res.setHeader('Content-Disposition', `attachment; filename=${projectName}.zip`);
+        
+        // Piping the zip archive to the response
+        archive.pipe(res);
+        
+        // Adding files to the zip archive
+        for(let file of files){
+            archive.file(file);
+        }
+
+        archive.finalize(); // Sends the response to the client
+
+    }catch(err){
+        console.log(err);
+        res.json({status : false, message : "Couldn't find such a project"});
+    }
+}
+
+module.exports.searchProjects = async(req, res, next) => {
+    try{
+        console.log(req.query.name);
+        if(!req.query.name.length){
+            res.json({status : true, result : []});
+            return;
+        }
+        const connection = await pool.getConnection();
+        const SELECTION_LIMIT = 10;
+        const query = `SELECT projects.project_name, projects.techlead_name, organizations.org_name FROM projects INNER JOIN organizations\ 
+ON projects.org_id = organizations.org_id AND  projects.project_name LIKE '%${req.query.name}%' LIMIT ${SELECTION_LIMIT};`;
+
+        const [projects, fields] = await connection.execute(query);
+
+        console.log(projects);
+
+        connection.release();
+
+        res.json({status : true, result : projects});
+
+
+    }catch(err){
+        console.log(err);
+        res.json({status : false, message : "Something went wrong !! Couldn't fetch projects"});
+    }
+} 

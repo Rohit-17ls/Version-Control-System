@@ -1,16 +1,16 @@
 import React from 'react'
 
-const BranchIcon = () => {
+const BranchIcon = ({width, height, strokeWidth}) => {
   return (
     <svg
-        width="22px"
-        height="22px"
+        width={width || "22px"}
+        height={height || "22px"}
         viewBox="0 0 16 16"
         fill="none"
         stroke="#ffffff"
         strokeLinecap="round"
         strokeLinejoin="round"
-        strokeWidth="1.5"
+        strokeWidth={strokeWidth || "1.5"}
         className='hover:opacity-90 inline mx-1'
     >
     <circle cx="4.5" cy="3.5" r="1.75" />

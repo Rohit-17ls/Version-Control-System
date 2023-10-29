@@ -11,7 +11,8 @@ module.exports.runCommand = async (req, res, next) => {
         const cwd = `${process.env.PROJECTS_DIRECTORY}/${req.body.orgname}/${req.body.projectName}/${req.body.projectPath}`;
         
         // Disallow non-git commands
-        const commandRegex = /^git[^("&&"|"|")]*$/;
+        // const commandRegex = /^git[^("&&"|"|")]*$/;
+        const commandRegex = /^git[^(&&||)]*$/;
         const match = command.match(commandRegex);
         console.log(`Running command : ${command} from ${cwd}`);
 

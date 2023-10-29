@@ -25,4 +25,17 @@ router.post('/api/new/project', authMiddleware.authMiddlewareForOrganization, as
     projectController.createProject(req, res, next);
 })
 
+
+router.post('/api/addFiles', authMiddleware.authMiddleware, async(req, res, next) => {
+    projectController.addFiles(req, res, next);
+});
+
+router.get('/api/:orgname/:projectName.git', async(req, res, next) => {
+    projectController.sendZippedProject(req, res, next);
+})
+
+router.get('/api/search/project', async(req, res, next) => {
+    projectController.searchProjects(req, res, next);
+})
+
 module.exports = router;
