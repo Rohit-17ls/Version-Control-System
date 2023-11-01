@@ -9,14 +9,14 @@ module.exports.authMiddleware = async(req, res, next) => {
         jwt.verify(token, process.env.JWT_SECRET_KEY.toString(), 
             async(err, decodedToken) => {
                 if(err){
-                    res.json({authStatus : false, message : err.message});
+                    res.json({isNotAuthorized : true, message : err.message});
                 }else{
                     next();
                 }
             }
         )
     }else{
-        res.json({authStatus : false, message : 'Unauthorized!! Login to continue'});
+        res.json({isNotAuthorized : true, message : 'Unauthorized!! Login to continue'});
     }
 
 }
@@ -31,14 +31,14 @@ module.exports.authMiddlewareForOrganization = async(req, res, next) => {
             async(err, decodedToken) => {
                 console.log(decodedToken)
                 if(err){
-                    res.json({authStatus : false, message : err.message});
+                    res.json({isNotAuthorized : true, message : err.message});
                 }else{
                     next();
                 }
             }
         )
     }else{
-        res.json({authStatus : false, message : 'Unauthorized!! Login to continue'});
+        res.json({isNotAuthorized : true, message : 'Unauthorized!! Login to continue'});
     }
 
 }

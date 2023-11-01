@@ -9,6 +9,8 @@ import BranchList from '../components/Utility/BranchList';
 import AddIcon from '../components/Icons/AddIcon';
 import Button from '../components/Core/Button';
 import DownloadIcon from '../components/Icons/DownloadIcon';
+import Center from '../components/Effect/Center';
+import CommitInsightsIcon from '../components/Icons/CommitInsightsIcon';
 
 
 const ORGNAME_INDEX = 3;
@@ -25,11 +27,12 @@ const Project = () => {
                                     }, [navigate]);
 
     const orgname = useMemo(() =>  {
-                                const cookie = document.cookie.match(/orgname=[a-zA-Z]+(-[a-zA-Z0-9]+)*$/i);
-                                if(!cookie) return cookie;
+                                // const cookie = document.cookie.match(/orgname=[a-zA-Z]+(-[a-zA-Z0-9]+)*$/i);
+                                // if(!cookie) return cookie;
 
-                                // if(cookie.length) navigate('/auth');
-                                return hrefSplit[3];
+                                // // if(cookie.length) navigate('/auth');
+                                // return hrefSplit[3];
+                                return hrefSplit[ORGNAME_INDEX];
                             }, []);
 
     const [projectName, branchName] = useMemo(() => [hrefSplit[PROJECT_INDEX],
@@ -41,7 +44,7 @@ const Project = () => {
     const [commandPalette, setCommandPalette] = useState(false);
     const [showBranch, setShowBranch] = useState(false);
     const [files, setFiles] = useState([]);
-    const [addFilesStatus, setAddFilesStatus] = useState('Add Files');
+    const [addFilesStatus, setAddFilesStatus] = useState('');
 
     const uploadFilesRef = useRef();
     const downloadTargetRef = useRef();
@@ -98,8 +101,7 @@ const Project = () => {
       });
       const data = await res.json();
 
-      if(!data.status) setAddFilesStatus('Failed to add files');
-      else setAddFilesStatus('Added files');
+      setAddFilesStatus(data.message);
 
       console.log(data);
       
@@ -126,7 +128,7 @@ const Project = () => {
 
     return (
       <section>
-          <Small className='my-5 hover:underline' onClick={(e) => {navigate('/')}}>{orgname}</Small>
+          <Small className='my-5 hover:underline' onClick={(e) => {navigate(`/${orgname}/projects`)}}>{orgname}</Small>
           <Small className='text-4xl'>{projectName}</Small>
           <div className='flex flex-row items-center gap-[2vw] my-6'>
             <div className={`${showBranch ? 'flex flex-col' : ''} `}
@@ -148,6 +150,11 @@ const Project = () => {
             </div>
             <div title="Download as zip" onClick={(e) => {downloadProject(e)}}>
               <DownloadIcon/>
+            </div>
+            <div title="Commit Insights"
+                 className='mt-[-8px] ml-[-10px]'
+                 onClick={(e) => {navigate(`/${orgname}/${projectName}/commits`)}}>
+              <CommitInsightsIcon/>
             </div>
             <a className='hidden' ref={downloadTargetRef}></a>
           </div>
@@ -171,7 +178,8 @@ const Project = () => {
                                                                 </div>)
                 }
               </div>
-              <Button className='w-[33%] bg-success-dark' clickHandler={(e) => {addFiles()}}>{addFilesStatus}</Button>
+              <Center><span>{addFilesStatus}</span></Center>
+              <Button className='w-[33%] bg-success-dark' clickHandler={(e) => {addFiles()}}>Add Files</Button>
             </div>
 
           </dialog>

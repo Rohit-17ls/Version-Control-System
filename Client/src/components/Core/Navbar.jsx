@@ -12,6 +12,7 @@ const Navbar = () => {
         <Medium clickHandler={() => {navigate('/')}}>Version</Medium>
         <div className='w-1/2 max-w-[500px] flex flex-row justify-evenly'>
             <Small color='muted' onClick={(e) => {navigate('/projects')}}>Projects</Small>
+            <Small color='muted' onClick={(e) => {navigate('/new-project')}}>New Project</Small>
              <Small color='muted' onClick={(e) => {navigate('/auth')}}>Sign Up</Small>
         </div>
     </div>

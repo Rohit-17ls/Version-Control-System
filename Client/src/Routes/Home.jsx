@@ -39,13 +39,13 @@ const Home = () => {
           Your Version Control Platform provides a reliable and robust version control system for your organization's software development needs. With features like branch management, commit tracking, and powerful collaboration tools, we make version control easy and efficient.
         </p>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div className='bg-gray-100 rounded p-2 my-2 m-auto'>
+          <div className='bg-slate-500 rounded p-2 my-2 m-auto'>
             <BranchIcon height={300} width={300} strokeWidth={0.8}/>
           </div>
-          <div className='bg-gray-100 rounded p-2 my-2 m-auto'>
+          <div className='bg-slate-500 rounded p-2 my-2 m-auto'>
             <HomePageIconCode height={300} width={300} strokeWidth={1}/>
           </div>
-          <div className='bg-gray-100 rounded p-2 my-2 m-auto'>
+          <div className='bg-slate-500 rounded p-2 my-2 m-auto'>
             <HomePageIconVersionControl height={300} width={300} strokeWidth={0.8}/>
           </div>
         </div>

@@ -29,7 +29,6 @@ const NewProject = () => {
         const cookie = document.cookie.match(/orgname=[a-zA-Z]+(-[a-zA-Z0-9]+)*$/i);
         if(!cookie) return cookie;
 
-        if(cookie.length) navigate('/auth');
         return cookie[0].split('=')[1];
     }, [])
 

@@ -4,6 +4,7 @@ const Input = ({name, value, placeholder, error, className, changeHandler, input
   return (
     <input className={`w-full border-1 bg-transparent outline-none p-2 rounded-lg hover ${error === undefined || !error ? 'border-muted' :  'border-error'} ${className}`}
            name={name}
+           spellCheck={"false"}
            value={value}
            placeholder={placeholder}
            onChange={changeHandler}

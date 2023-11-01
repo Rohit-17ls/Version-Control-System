@@ -12,6 +12,7 @@ import NewProject from './Routes/NewProject'
 import Project from './Routes/Project'
 import ProjectList from './Routes/ProjectList'
 import SearchProjects from './Routes/SearchProjects'
+import CommitInsights from './Routes/CommitInsights'
 
 
 function App() {
@@ -29,6 +30,7 @@ function App() {
           <Route path="/new-project" element={<NewProject/>}/>
           <Route path="projects" element={<SearchProjects/>}/>
           <Route path="/:orgname/projects" element={<ProjectList/>}/>
+          <Route path="/:orgname/:projectName/commits" element={<CommitInsights/>}/>
           <Route path="/:org/:projectName/:branchName/*" element={<Project/>}/>
           <Route path="*" element={<NotFound/>}/>
         </Routes>
