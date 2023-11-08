@@ -82,7 +82,6 @@ const CommmitAnalysis = () => {
 
 
         fetchCommitDiff();
-        // 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
 
     }, []);
 
