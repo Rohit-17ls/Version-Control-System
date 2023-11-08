@@ -36,7 +36,6 @@ const DevLogin = () => {
         navigate('/');
 
 
-        console.log(username, password);
     }
     
 

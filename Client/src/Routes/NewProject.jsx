@@ -26,10 +26,10 @@ const NewProject = () => {
     const filesRef = useRef();
 
     const orgname = useMemo(() =>  {
-        const cookie = document.cookie.match(/orgname=[a-zA-Z]+(-[a-zA-Z0-9]+)*$/i);
-        if(!cookie) return cookie;
+        const cookie = document.cookie.split('orgname');
+        if(cookie.length === 1) navigate('/auth');
 
-        return cookie[0].split('=')[1];
+        return cookie[1].split(';')[0].slice(1,);
     }, [])
 
     const validateProjectName = useCallback((name) => {

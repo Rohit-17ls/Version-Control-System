@@ -4,6 +4,7 @@ const {exec} = require('child_process');
 const AnsiToHtml = require('ansi-to-html');
 require('dotenv').config();
 const {pool} = require('../DB/connection.js');
+const { runInNewContext } = require('vm');
 
 /************************************************************************************************************************************************* */
 
@@ -390,9 +391,10 @@ class ProjectController{
             
 
             const ansiToHtml = new AnsiToHtml();
-            const formatString = "</details><div class='text-3xl my-8 semibold'>%H</div><strong style='color:#cfcf00; margin-top: -1vh'>\
+            const formatString = `</pre></details><div class='text-3xl my-8 semibold'>Commit Hash : %H</div><strong style='color:#cfcf00; margin-top: -1vh'>\
 %nDate : %ad%nCommit : %s%n</strong><details class='p-2 card-bg rounded-lg min-w-[400px] max-w-[600px]'><summary><strong class='my-3'>\
-View Diff</strong></summary>";
+View Diff</strong><button class='p-1 button rounded-lg' style='background : #918f8bd9; margin-left : 20px' type='button'>\
+<a href="/${orgname}/${projectName}/commit/%H">Analyze with AI</a></button></summary><pre style='white-space : pre-wrap'>`;
             const command = `git show --format="${formatString}" --color="always" --skip=${skip} -${count}`;
             console.log(command);
 
@@ -404,7 +406,7 @@ View Diff</strong></summary>";
                 }
             
                 // Convert ANSI escape codes to HTML
-                const htmlOutput = `${ansiToHtml.toHtml(stdout)}</details>`.slice(10, );
+                const htmlOutput = `${ansiToHtml.toHtml(stdout)}</pre></details>`.slice(16, );
             
                 // Display the HTML with preserved colors
                 res.json({status : true, result : htmlOutput});
@@ -417,6 +419,69 @@ View Diff</strong></summary>";
             res.json({status : false, message : "Couldn't fetch commit insights"});
         }
     }
+
+    static async getCommitDiffByCommitHash(req, res, next){
+        try{
+            const orgname = req.params.orgname;
+            const projectName = req.params.projectName;
+            const commitHash = req.params.commitHash;
+
+            const cwd = `${process.env.PROJECTS_DIRECTORY}/${orgname}/${projectName}`;
+            const ansiToHtml = new AnsiToHtml();
+
+            const formatString = `<div class='p-2 card-bg rounded-lg min-w-[400px] max-w-[600px]'><div><strong class='my-3'>\
+Diff for <span style='color : #cfcf00'>%H</span></strong></div><pre style='white-space : pre-wrap'>`;
+            const command = `git show --format="${formatString}" --color="always"`;
+
+            exec(command, {cwd}, async(error, stdout, stderr) => {
+                if (error){
+                    console.error(`---> Error: ${error.message} <---`);
+                    res.json({status : false, message : "Couldn't fetch commit insights"});
+                    return;
+                }
+            
+                // Convert ANSI escape codes to HTML
+                const htmlOutput = `${ansiToHtml.toHtml(stdout)}</pre></div>`;
+            
+                // Display the HTML with preserved colors
+                res.json({status : true, result : htmlOutput});
+
+            });
+            
+
+        }catch(err){
+            console.log(err);
+            res.json({status : false, message : "Couldn't fetch commit diff"});
+        }
+    }
+
+
+    static async analyzeCommitDiffUsingLlama(req, res, next){
+        try{
+            const diff = req.body.diff;
+            const cwd = '.';
+            const command = `sh prompt.sh "${diff.replaceAll('\n', ' ')}"`;
+
+            exec(command, {cwd}, async(error, stdout, stderr) => {
+                if(error){
+                    console.log(error);
+                    res.json({status : false, message : 'AI is unavailable, possibly due to high demand. Try again later...'});
+                    return;                   
+                }
+
+                res.json({status : true, result : stdout});
+            })
+
+            // console.log(command);
+            // res.json({status : true, result : 'AI is analyzing, please wait'});
+
+
+        }catch(err){
+            console.log(err);
+            res.json({status : false, message : 'AI is unavailable, possibly due to high demand. Try again later...'})
+        }
+    }
+
 
 }
 

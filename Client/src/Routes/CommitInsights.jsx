@@ -1,10 +1,14 @@
-import React, { useContext, useEffect, useMemo, useState, useRef } from 'react'
+import React, { useContext, useEffect, useMemo, useState, useRef } from 'react';
+import {createRoot} from 'react-dom/client';
+import ReactDOM from 'react-dom';
+import JsxParser from 'react-jsx-parser';
 import Medium from '../components/Headings/Medium';
 import Small from '../components/Headings/Small';
 import { AppContext } from '../context/AppContext';
 
 const ORGNAME_INDEX = 3;
 const PROJECT_INDEX = 4;
+
 
 const CommitInsights = () => {
 
@@ -32,7 +36,10 @@ const CommitInsights = () => {
             return;
         }
 
+
         insightsRef.current.innerHTML = data.result;
+
+
     }
 
     console.log(range);
@@ -73,9 +80,9 @@ const CommitInsights = () => {
         </div>        
 
         <section>
-            <pre ref={insightsRef} className='whitespace-pre-wrap'>
-
-            </pre>
+            <div ref={insightsRef} className='whitespace-pre-wrap consolas'>
+                {/* {response} */}
+            </div>
         </section>
 
     </div>

@@ -13,7 +13,11 @@ router.get('/api/project/:orgname/:projectName/:branch/:path(*)', async(req, res
 
 router.get('/api/commits/:orgname/:projectName/:skip/:count', async(req, res, next) => {
     ProjectController.getCommitInsights(req, res, next);
-})
+});
+
+router.get('/api/commit/:orgname/:projectName/:commitHash', async(req, res, next) => {
+    ProjectController.getCommitDiffByCommitHash(req, res, next);
+});
 
 router.get('/api/branches/:orgname/:projectName', async(req, res, next) => {
     ProjectController.getBranches(req, res, next);
@@ -42,6 +46,11 @@ router.get('/api/:orgname/:projectName.git', async(req, res, next) => {
 
 router.get('/api/search/project', async(req, res, next) => {
     ProjectController.searchProjects(req, res, next);
+});
+
+router.post('/api/commit/analyze', async(req, res, next) => {
+    ProjectController.analyzeCommitDiffUsingLlama(req, res, next);
 })
+
 
 module.exports = router;
