@@ -1,4 +1,4 @@
-import React,{useCallback, useMemo, useRef, useState} from 'react'
+import React,{useCallback, useContext, useMemo, useRef, useState} from 'react'
 import Big from '../components/Headings/Big'
 import Small from '../components/Headings/Small';
 import Input from '../components/Core/Input'
@@ -6,21 +6,33 @@ import Label from '../components/Core/Label';
 import Medium from '../components/Headings/Medium';
 import SearchBar from '../components/Utility/SearchBar';
 import Button from '../components/Core/Button';
+import { AppContext } from '../context/AppContext';
 
 const projectNameRegexp = /^[a-zA-Z0-9_]+(-[a-zA-Z0-9_]+)*$/;
 const usernameRegexp = /^[a-zA-Z]+(-[a-zA-Z0-9]+)*$/;
 
 const NewProject = () => {
 
+    const {navigate} = useContext(AppContext);
     const [projectName, setProjectName] = useState({name : '', isValid : true});
     const [techLeadName, setTechLeadName] = useState({name : '', isValid : true});
     const [devName, setDevName] = useState('');
     const [searchResults, setSearchResults] = useState([]);
+    const [response, setResponse] = useState({status : false, message : ''});
     
     const [devList, setDevList] = useState([]);
     const [files, setFiles] = useState([]);
     const [fileNames, setFileNames] = useState([]);
     const filesRef = useRef();
+
+    const orgname = useMemo(() =>  {
+        const cookie = document.cookie.split('orgname');
+        if(cookie.length === 1) navigate('/auth');
+
+        const orgname = cookie[1].split(';')[0].slice(1,);
+        console.log(orgname);
+        return orgname;
+    }, [])
 
     const validateProjectName = useCallback((name) => {
         setProjectName({name, isValid : projectNameRegexp.test(name)});
@@ -30,47 +42,67 @@ const NewProject = () => {
         setTechLeadName({name , isValid : usernameRegexp.test(name)});
     });
 
-    const handleFilesDrop = useCallback((e) => {
+    const handleFilesDrop = useCallback(async (e) => {
         e.preventDefault();
         console.log('File(s) Dropped');
         const names = [];
-        const filesAsObj = [];
+        const filesAsObj = []; 
 
         if (e.dataTransfer.items) {
-            [...e.dataTransfer.items].forEach((item, i) => {
+            [...e.dataTransfer.items].forEach(async (item, i) => {
               console.log(item.kind);
               if (item.kind === "file") {
                 const file = item.getAsFile();
-                filesAsObj.push(file);
+                const reader  = new FileReader();
+
+                reader.onload = async(e) => {
+                    const fileContent = e.target.result;
+                    console.log(fileContent)
+                    setFiles(prevState => [...prevState, {name : file.name, content : fileContent}]);
+                }
+
+                reader.readAsText(file)
                 names.push(file.name);
               }
             });
+
+            
+
         } else {
             [...e.dataTransfer.files].forEach((file, i) => {
                 filesAsObj.push(file);
                 names.push(file.name);
             });
+
+            setFiles(prevState => [...prevState, ...filesAsObj]);
         }
-        
-        setFiles(prevState => [...prevState, ...filesAsObj]);
-        setFileNames(prevState => [...prevState, ...names])
+
+        setFileNames(prevState => [...prevState, ...names]);
+        console.log(filesAsObj)
+
+
 
     });
 
     
     const handleFilesSelection = useCallback((e) => {
         const names = [];
-        const filesAsObj = [];
 
         const files = e.target.files;
         if (files.length > 0) {
             for (let i = 0; i < files.length; i++) {
-                filesAsObj.push(files[i]);
+                const reader = new FileReader();
+
+                reader.onload = (e) => {
+                    const fileContent = e.target.result;
+                    setFiles(prevState => [...prevState, {name : files[i].name, content : fileContent}]);
+                }
+
                 names.push(files[i].name);
+                reader.readAsText(files[i]);
             }
         }
         
-        setFiles(prevState => [...prevState, ...filesAsObj]);
         setFileNames(prevState => [...prevState, ...names]);
     });
     
@@ -93,6 +125,7 @@ const NewProject = () => {
         if(data.isSuccess){
             // const devListArray = new Array(...devList);
             setSearchResults(data.result.map((name, ind) => <p onClick={(e) => {addDeveloper(e)}}
+                                                            key={ind}
                                                             className={`${(devList.includes(name) || techLeadName === name) && 'text-success italic'}`}>
                                                             {name}
                                                             </p>));
@@ -100,9 +133,36 @@ const NewProject = () => {
 
     });
 
-    const handleCreateProject = useCallback((e) => {
+    const handleCreateProject = useCallback(async(e) => {
         console.log('Creating Project');
-    })
+        console.log(files, fileNames, devList, techLeadName);
+        const projectData = {techLeadName : techLeadName.name,
+                            projectName : projectName.name,
+                            developers : devList,
+                            orgname : orgname,
+                            content : files}
+
+        console.log(projectData);
+
+        const res = await fetch('http://localhost:7888/api/new/project', {
+            method : 'POST',
+            credentials : 'include',
+            headers : {
+                'Content-Type' : 'application/json'
+            },
+            body : JSON.stringify(projectData)
+        });
+
+        const data = await res.json();
+        console.log(data)
+        if(data.status){
+            navigate(`/${orgname}/${projectName.name}/main`);
+            return;
+        }
+
+        setResponse(data);
+
+    })  
 
 
     return (
@@ -142,7 +202,7 @@ const NewProject = () => {
                     {`${fileNames.length} file(s) dropped`}
                     {fileNames.length > 20 && <Medium>...</Medium>}
                     {fileNames.slice(-20, fileNames.length).map((fileName, ind) => 
-                            <li className={`p-2 bg-hover border-[1px] mb-1 border-muted rounded-lg hover:brightness-125`}>
+                            <li className={`p-2 bg-hover border-[1px] mb-1 border-muted rounded-lg hover:brightness-125`} key={ind}>
                                 {fileName}
                             </li>)}
                 </ul>
@@ -169,9 +229,13 @@ const NewProject = () => {
             </div>
 
             <Button clickHandler={(e) => {handleCreateProject(e)}}
-                    className={'bg-success w-[70%] sm-max:w-full my-[10vh]'}>
+                    className={'bg-success-dark w-[70%] sm-max:w-full my-[10vh]'}>
                     Create Project
             </Button>
+
+            <div className={`my-5  w-full ${response.status ? 'text-success' : 'text-error'}`}>
+                {response.message}
+            </div>
 
          </section>
     </>

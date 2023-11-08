@@ -57,3 +57,19 @@
 .hover:hover{
   background: #141414;
 }
+
+.consolas{
+  font-family: consolas;
+}
+
+.card-bg{
+  background-color: #141414;
+}
+
+.button{
+  background: #129f2f;
+  color: white;
+  padding : 0.3em;
+  margin-left : 20px;
+  border-radius: 1em;
+}

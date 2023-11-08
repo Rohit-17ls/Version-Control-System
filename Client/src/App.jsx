@@ -10,6 +10,9 @@ import OrgLogin from './Routes/OrgLogin'
 import AppContextProvider from './context/AppContext'
 import NewProject from './Routes/NewProject'
 import Project from './Routes/Project'
+import ProjectList from './Routes/ProjectList'
+import SearchProjects from './Routes/SearchProjects'
+import CommitInsights from './Routes/CommitInsights'
 
 
 function App() {
@@ -25,7 +28,10 @@ function App() {
           <Route path="/org/signup" element={<OrgSignup/>}/>
           <Route path="/org/login" element={<OrgLogin/>}/>
           <Route path="/new-project" element={<NewProject/>}/>
-          <Route path="/:org/:projectName/*" element={<Project/>}/>
+          <Route path="projects" element={<SearchProjects/>}/>
+          <Route path="/:orgname/projects" element={<ProjectList/>}/>
+          <Route path="/:orgname/:projectName/commits" element={<CommitInsights/>}/>
+          <Route path="/:org/:projectName/:branchName/*" element={<Project/>}/>
           <Route path="*" element={<NotFound/>}/>
         </Routes>
       
